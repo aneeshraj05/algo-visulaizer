@@ -2,12 +2,19 @@ import React from 'react';
 import ControlPanel from './ControlPanel';
 import Visualizer from './Visualizer';
 import StatsPanel from './StatsPanel';
+import CodePanel from './CodePanel';
+import Breadcrumb from './Breadcrumb';
 
 const Layout = () => {
     return (
         <div className="flex flex-col h-screen w-full bg-slate-900 text-slate-100 overflow-hidden">
+            <Breadcrumb />
+            <CodePanel />
+
             <header className="p-4 bg-slate-800 border-b border-slate-700 shadow-md z-10">
-                <h1 className="text-2xl font-bold text-blue-400 mb-4 text-center hidden md:block">Algorithm Visualizer</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-4 text-center tracking-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    Algorithm Visualizer
+                </h1>
                 <ControlPanel />
             </header>
 

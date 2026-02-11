@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { ARRAY_CONFIG, SPEED_CONFIG, ALGORITHMS, ANIMATION_TYPES } from '../utils/constants';
 import {
-    bubbleSort, insertionSort, selectionSort, mergeSort, quickSort, heapSort,
-    linearSearch, binarySearch, jumpSearch, interpolationSearch
+    bubbleSort, insertionSort, selectionSort, mergeSort, quickSort,
+    linearSearch, binarySearch
 } from '../algorithms';
 import { sleep } from '../utils/sleep';
 
@@ -14,9 +14,18 @@ export const AlgorithmProvider = ({ children }) => {
     const [array, setArray] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isSorted, setIsSorted] = useState(false);
-    const [algorithm, setAlgorithm] = useState(ALGORITHMS.SORTING[0].value);
-    const [speed, setSpeed] = useState(SPEED_CONFIG.DEFAULT_SPEED);
-    const [size, setSize] = useState(ARRAY_CONFIG.DEFAULT_SIZE);
+
+    // Load from localStorage or use defaults
+    const [algorithm, setAlgorithm] = useState(() =>
+        localStorage.getItem('algo_algorithm') || ALGORITHMS.SORTING[0].value
+    );
+    const [speed, setSpeed] = useState(() =>
+        Number(localStorage.getItem('algo_speed')) || SPEED_CONFIG.DEFAULT_SPEED
+    );
+    const [size, setSize] = useState(() =>
+        Number(localStorage.getItem('algo_size')) || ARRAY_CONFIG.DEFAULT_SIZE
+    );
+
     const [stats, setStats] = useState({ comparisons: 0, swaps: 0, steps: 0 });
     const [target, setTarget] = useState(null); // Target for search algorithms
 
@@ -25,6 +34,11 @@ export const AlgorithmProvider = ({ children }) => {
     const [swapIndices, setSwapIndices] = useState([]);
     const [sortedIndices, setSortedIndices] = useState([]);
     const [foundIndices, setFoundIndices] = useState([]);
+
+    // Core Upgrade V5: Pointers, Breadcrumbs, Line Highlighting
+    const [pointers, setPointers] = useState([]); // [{ index, label, color }]
+    const [message, setMessage] = useState(null); // { type: 'success'|'error', text: string }
+    const [activeLine, setActiveLine] = useState(null); // Current line number in code
 
     // Refs for safe access inside async loop
     const isPlayingRef = useRef(isPlaying);
@@ -42,6 +56,9 @@ export const AlgorithmProvider = ({ children }) => {
         setCompareIndices([]);
         setSwapIndices([]);
         setFoundIndices([]);
+        setPointers([]);
+        setMessage(null);
+        setActiveLine(null);
         setStats({ comparisons: 0, swaps: 0, steps: 0 });
         iteratorRef.current = null;
 
@@ -68,6 +85,24 @@ export const AlgorithmProvider = ({ children }) => {
         generateArray(size);
     }, [size, generateArray]);
 
+    // Persist settings to localStorage
+    useEffect(() => {
+        localStorage.setItem('algo_algorithm', algorithm);
+    }, [algorithm]);
+
+    useEffect(() => {
+        localStorage.setItem('algo_speed', speed);
+    }, [speed]);
+
+    useEffect(() => {
+        localStorage.setItem('algo_size', size);
+    }, [size]);
+
+    // Auto-reset when algorithm changes
+    useEffect(() => {
+        reset();
+    }, [algorithm]);
+
     const reset = () => {
         generateArray();
     };
@@ -80,13 +115,10 @@ export const AlgorithmProvider = ({ children }) => {
             case 'selectionSort': return selectionSort(arr);
             case 'mergeSort': return mergeSort(arr);
             case 'quickSort': return quickSort(arr);
-            case 'heapSort': return heapSort(arr);
 
             // Searching
             case 'linearSearch': return linearSearch(arr, tgt);
             case 'binarySearch': return binarySearch(arr, tgt);
-            case 'jumpSearch': return jumpSearch(arr, tgt);
-            case 'interpolationSearch': return interpolationSearch(arr, tgt);
 
             default: return bubbleSort(arr);
         }
@@ -104,10 +136,27 @@ export const AlgorithmProvider = ({ children }) => {
                 setIsPlaying(false);
                 setIsSorted(true);
                 iteratorRef.current = null;
-                // keep found indices?
                 setCompareIndices([]);
                 setSwapIndices([]);
+                setPointers([]);
                 return;
+            }
+
+            // Update pointers if present
+            if (step.pointers) {
+                setPointers(step.pointers);
+            } else {
+                setPointers([]);
+            }
+
+            // Update message if present
+            if (step.message) {
+                setMessage(step.message);
+            }
+
+            // Update active line if present
+            if (step.line !== undefined) {
+                setActiveLine(step.line);
             }
 
             // Handle Step
@@ -131,13 +180,6 @@ export const AlgorithmProvider = ({ children }) => {
                 setArray(prev => {
                     const newArr = [...prev];
                     const [index] = step.indices;
-                    // For Merge Sort, we are replacing the Value at index with new Value
-                    // But we want to keep the object ID if possible? 
-                    // Actually, if we overwrite, we lose the original object ID tracking if we are not careful.
-                    // But for simple bar chart, ID is for key.
-                    // If we reuse ID from the original array?
-                    // Merge Sort logic passed value.
-                    // We can just update value.
                     newArr[index] = { ...newArr[index], value: step.value };
                     return newArr;
                 });
@@ -153,8 +195,9 @@ export const AlgorithmProvider = ({ children }) => {
                 setCompareIndices([]);
             }
 
-            // Variable delay based on speed
-            const ms = Math.max(5, 500 - (speedRef.current * 4.9));
+            // Variable delay based on speed (slower for better visibility)
+            // Speed 1-100: Slowest (1) = 1000ms, Fastest (100) = 50ms
+            const ms = Math.max(50, 1000 - (speedRef.current * 9.5));
             await sleep(ms);
         }
     };
@@ -179,6 +222,7 @@ export const AlgorithmProvider = ({ children }) => {
         size,
         setSize,
         target,
+        setTarget,
         isPlaying,
         isSorted,
         stats,
@@ -187,6 +231,10 @@ export const AlgorithmProvider = ({ children }) => {
         swapIndices,
         sortedIndices,
         foundIndices,
+        pointers,
+        message,
+        setMessage,
+        activeLine,
         start,
         reset,
         pause
