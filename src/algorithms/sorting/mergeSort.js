@@ -1,80 +1,74 @@
-import { ANIMATION_TYPES } from '../../utils/constants';
+import { ANIMATION_TYPES } from "../../utils/constants";
 
 export function* mergeSort(array) {
-    const arr = array.map(item => item.value); // Just Values for simpler logic
-    // We need to yield steps with original objects or just values?
-    // Context expects values for Overwrite. `item.value` in array. 
-    // Wait, array objects have { value, id }.
-    // Overwrite in context: `newArr[index] = { ...newArr[index], value: step.value };`
-    // So we pass the numeric value.
+    const arr = [...array];
+    yield* mergeSortHelper(arr, 0, arr.length - 1);
 
-    yield* mergeSortHelper(arr, 0, arr.length - 1, array);
+    // Final sorted
+    yield {
+        type: ANIMATION_TYPES.SORTED,
+        indices: Array.from({ length: arr.length }, (_, i) => i),
+        pointers: []
+    };
 }
 
-function* mergeSortHelper(mainArray, startIdx, endIdx, originalArrayObjs) {
-    if (startIdx === endIdx) return;
+function* mergeSortHelper(arr, left, right) {
+    if (left >= right) return;
 
-    const middleIdx = Math.floor((startIdx + endIdx) / 2);
+    const mid = Math.floor((left + right) / 2);
 
-    yield* mergeSortHelper(mainArray, startIdx, middleIdx, originalArrayObjs);
-    yield* mergeSortHelper(mainArray, middleIdx + 1, endIdx, originalArrayObjs);
+    // Visualize division
+    yield {
+        type: ANIMATION_TYPES.COMPARE,
+        indices: [mid],
+        pointers: [
+            { index: left, label: 'L', color: 'bg-blue-400' },
+            { index: right, label: 'R', color: 'bg-blue-400' }
+        ],
+        line: 3
+    };
 
-    yield* doMerge(mainArray, startIdx, middleIdx, endIdx);
+    yield* mergeSortHelper(arr, left, mid);
+    yield* mergeSortHelper(arr, mid + 1, right);
+    yield* merge(arr, left, mid, right);
 }
 
-function* doMerge(mainArray, startIdx, middleIdx, endIdx) {
-    let k = startIdx;
-    let i = startIdx;
-    let j = middleIdx + 1;
+function* merge(arr, left, mid, right) {
+    // Calculate sorted order
+    const aux = [];
+    let p = left;
+    let q = mid + 1;
 
-    const auxiliaryArray = mainArray.slice();
-
-    while (i <= middleIdx && j <= endIdx) {
-        yield {
-            type: ANIMATION_TYPES.COMPARE,
-            indices: [i, j]
-        };
-
-        if (auxiliaryArray[i] <= auxiliaryArray[j]) {
-            yield {
-                type: ANIMATION_TYPES.OVERWRITE,
-                indices: [k],
-                value: auxiliaryArray[i]
-            };
-            mainArray[k++] = auxiliaryArray[i++];
+    while (p <= mid && q <= right) {
+        if (arr[p].value <= arr[q].value) {
+            aux.push(arr[p]);
+            p++;
         } else {
-            yield {
-                type: ANIMATION_TYPES.OVERWRITE,
-                indices: [k],
-                value: auxiliaryArray[j]
-            };
-            mainArray[k++] = auxiliaryArray[j++];
+            aux.push(arr[q]);
+            q++;
         }
     }
-
-    while (i <= middleIdx) {
-        yield {
-            type: ANIMATION_TYPES.COMPARE,
-            indices: [i, i] // Dummy comparison
-        };
-        yield {
-            type: ANIMATION_TYPES.OVERWRITE,
-            indices: [k],
-            value: auxiliaryArray[i]
-        };
-        mainArray[k++] = auxiliaryArray[i++];
+    while (p <= mid) {
+        aux.push(arr[p]);
+        p++;
+    }
+    while (q <= right) {
+        aux.push(arr[q]);
+        q++;
     }
 
-    while (j <= endIdx) {
-        yield {
-            type: ANIMATION_TYPES.COMPARE,
-            indices: [j, j]
-        };
+    // Visualize overwriting
+    for (let idx = 0; idx < aux.length; idx++) {
         yield {
             type: ANIMATION_TYPES.OVERWRITE,
-            indices: [k],
-            value: auxiliaryArray[j]
+            indices: [left + idx],
+            value: aux[idx].value,
+            pointers: [
+                { index: left + idx, label: 'merge', color: 'bg-green-400' }
+            ],
+            line: 15
         };
-        mainArray[k++] = auxiliaryArray[j++];
+
+        arr[left + idx] = aux[idx];
     }
 }

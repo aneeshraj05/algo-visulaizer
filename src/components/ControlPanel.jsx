@@ -7,6 +7,7 @@ const ControlPanel = () => {
         algorithm, setAlgorithm,
         size, setSize,
         speed, setSpeed,
+        target, setTarget,
         generateArray,
         start, reset, pause,
         isPlaying
@@ -60,6 +61,23 @@ const ControlPanel = () => {
                     className="w-full h-1 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
                 />
             </div>
+
+            {/* Target Input (for search algorithms) */}
+            {algorithm.toLowerCase().includes('search') && (
+                <div className="flex flex-col items-center min-w-[100px]">
+                    <label className="text-xs text-slate-400 mb-1">Target</label>
+                    <input
+                        type="number"
+                        min={ARRAY_CONFIG.MIN_VALUE}
+                        max={ARRAY_CONFIG.MAX_VALUE}
+                        value={target || ''}
+                        onChange={(e) => setTarget(Number(e.target.value))}
+                        disabled={isPlaying}
+                        className="w-20 px-3 py-1.5 bg-slate-700 border border-slate-600 rounded text-sm text-center focus:outline-none focus:border-blue-500 transition-colors"
+                        placeholder="Value"
+                    />
+                </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-2">

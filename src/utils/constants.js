@@ -5,28 +5,25 @@ export const ALGORITHMS = {
         { value: 'selectionSort', label: 'Selection Sort', time: 'O(n²)', space: 'O(1)' },
         { value: 'mergeSort', label: 'Merge Sort', time: 'O(n log n)', space: 'O(n)' },
         { value: 'quickSort', label: 'Quick Sort', time: 'O(n log n)', space: 'O(log n)' },
-        { value: 'heapSort', label: 'Heap Sort', time: 'O(n log n)', space: 'O(1)' },
     ],
     SEARCHING: [
         { value: 'linearSearch', label: 'Linear Search', time: 'O(n)', space: 'O(1)' },
         { value: 'binarySearch', label: 'Binary Search', time: 'O(log n)', space: 'O(1)' },
-        { value: 'jumpSearch', label: 'Jump Search', time: 'O(√n)', space: 'O(1)' },
-        { value: 'interpolationSearch', label: 'Interpolation Search', time: 'O(log(log n))', space: 'O(1)' },
     ]
 };
 
 export const ARRAY_CONFIG = {
     MIN_SIZE: 5,
-    MAX_SIZE: 100,
+    MAX_SIZE: 50, // Maximum number of bars
     DEFAULT_SIZE: 20,
     MIN_VALUE: 5,
-    MAX_VALUE: 100,
+    MAX_VALUE: 50,
 };
 
 export const SPEED_CONFIG = {
     MIN_SPEED: 1,
     MAX_SPEED: 100,
-    DEFAULT_SPEED: 50,
+    DEFAULT_SPEED: 30,
 };
 
 export const COLORS = {
